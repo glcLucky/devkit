@@ -39,7 +39,7 @@ def umap_reducer(X, n_components=2, **kwargs):
     return umap_embedding
 
 
-def tsne_reducer(X, n_components=2, verbose=1, perplexity=40, n_iter=500, **kwargs):
+def tsne_reducer(X, n_components=2, **kwargs):
     """
     use tsne to reduce the dimensionality of data
     @X <2d np.array>: the data to reduce
@@ -49,11 +49,7 @@ def tsne_reducer(X, n_components=2, verbose=1, perplexity=40, n_iter=500, **kwar
     from sklearn.manifold import TSNE
     assert len(X.shape) == 2
     tsne_reducer = TSNE(
-        n_components=n_components,
-        verbose=verbose,
-        perplexity=perplexity,
-        n_iter=n_iter,
-        **kwargs)
+        n_components=n_components, **kwargs)
     tsne_embedding = tsne_reducer.fit_transform(X)
     return tsne_embedding
 

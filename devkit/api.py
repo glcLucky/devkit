@@ -11,6 +11,7 @@ api.py
 from . src.utils.viz import mgc_scatter
 from . src.utils.viz import tsne_reducer
 from . src.utils.viz import umap_reducer
+from . src.utils.viz import data_viz
 
 from . src.utils.viz import plot_feature_importances
 
