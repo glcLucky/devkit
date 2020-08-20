@@ -19,7 +19,7 @@ def mgc_scatter(x, y, colors=None, includ_colorbar=False, title=None, figsize=(1
         includ_colorbar = False
 
     if includ_colorbar:
-        n_colors = len(set(colors))
+        n_colors = len(set(colors)) + 1
         plt.colorbar(boundaries=np.arange(n_colors)-0.5).set_ticks(np.arange(n_colors))
     if title is not None:
         assert isinstance(title, dict)
@@ -87,3 +87,56 @@ def plot_feature_importances(feat_imp, feat_labels, nlargest=10, fontsize=20, co
     ts_feat_imp = pd.Series(feat_imp, index=feat_labels)
     ts_feat_imp.nlargest(nlargest)[::-1].plot(kind='barh', figsize=(10,10), color=category_colors[::-1])
     plt.title("feature importance of the most {} importanct features".format(nlargest), fontsize=fontsize)
+
+
+def mgcMultiHeat(**kwargs):
+    """
+    return multiple heatmap plot
+    @X <np.array>: [n_samples, height, width, <channel, 3 or 4>]
+    @arr_mse <1d np.array>: 
+    """
+
+    from mpl_toolkits.axes_grid1 import ImageGrid
+    import math
+
+    def_kwargs = {
+        'X': None,
+        'arr_mse': None,
+        'arr_labels':None,
+        'set_random': False,
+        'nrows': 7,
+        'ncols': 5,
+    }
+
+    for k,v in def_kwargs.items():
+        kwargs.setdefault(k, v)
+
+    X = kwargs['X']
+    arr_mse = kwargs['arr_mse']
+    arr_labels = kwargs['arr_labels']
+    set_random= kwargs['set_random']
+    nrows = kwargs['nrows']
+    ncols = kwargs['ncols']
+
+    n_samples = len(X)
+
+    if set_random:
+        idx_selected = np.random.choice(n_samples, nrows*ncols, replace=False)
+    else:
+        idx_selected = np.array(list(range(ncols*nrows)))
+    
+    X_sub = X[idx_selected]
+
+    if arr_mse is not None:
+        arr_mse_sub = arr_mse[idx_selected]
+    
+    if arr_labels is not None:
+        arr_labels_sub = arr_labels[idx_selected]
+    print("total samples: {} / {}".format(len(X_sub), ))
+
+
+
+
+
+
+

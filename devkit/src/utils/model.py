@@ -104,6 +104,20 @@ def make_confusion_matrix(cf,
     if title:
         plt.title(title)
 
+def clustering_accuracy(gtlabels, labels):
+    """
+    calculate the accuracy of clustering results
+    """
+    from scipy.optimize import linear_sum_assignment
+    cost_matrix = []
+    categories = np.unique(gtlabels)
+    nr = np.amax(labels) + 1
+    for i in np.arange(len(categories)):
+        cost_matrix.append(np.bincount(labels[gtlabels == categories[i]], minlength=nr))
+    cost_matrix = np.asarray(cost_matrix).T
+    row_ind, col_ind = linear_sum_assignment(np.max(cost_matrix) - cost_matrix)
+
+    return float(cost_matrix[row_ind, col_ind].sum()) / len(gtlabels)
 
 class Hinton_mat():
     def __init__(self):
