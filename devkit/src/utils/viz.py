@@ -97,13 +97,17 @@ def mgcMultiHeat(**kwargs):
     """
 
     from mpl_toolkits.axes_grid1 import ImageGrid
-    import math
+    import numpy as np
 
     def_kwargs = {
         'X': None,
         'arr_mse': None,
-        'arr_labels':None,
+        'arr_ids': None, # the ID of each image belonging to
+        'arr_labels':None,  # the label of each image belonging to
+        'category': None,
         'set_random': False,
+        'figsize': (20, 10),
+        'title_size': 5,
         'nrows': 7,
         'ncols': 5,
     }
@@ -113,8 +117,12 @@ def mgcMultiHeat(**kwargs):
 
     X = kwargs['X']
     arr_mse = kwargs['arr_mse']
+    arr_ids = kwargs['arr_ids']
     arr_labels = kwargs['arr_labels']
+    category = kwargs['category']
     set_random= kwargs['set_random']
+    figsize = kwargs['figsize']
+    title_size = kwargs['title_size']
     nrows = kwargs['nrows']
     ncols = kwargs['ncols']
 
@@ -129,14 +137,113 @@ def mgcMultiHeat(**kwargs):
 
     if arr_mse is not None:
         arr_mse_sub = arr_mse[idx_selected]
+
+    if arr_ids is not None:
+        arr_ids_sub = arr_ids[idx_selected]
     
     if arr_labels is not None:
         arr_labels_sub = arr_labels[idx_selected]
-    print("total samples: {} / {}".format(len(X_sub), ))
+
+    print("total samples: {} / {}".format(len(X_sub), len(X)))
+    
+    if arr_ids is not None:
+        print("unique samples: {} / {}".format(
+            len(np.unique(arr_ids_sub)),
+            len(np.unique(arr_ids))))
+    
+
+    fig = plt.figure(figsize=figsize)
+
+    gird = ImageGrid(
+        fig,
+        111,
+        nrows_ncols=(nrows, ncols),
+        axes_pad=0.45,
+        share_all=True,
+        cbar_location='right',
+        cbar_mode='signle',
+        cbar_size='7%',
+        cbar_pad=0.15,        
+        )
+
+    for i, ax in enumerate(gird):
+        im = ax.imshow(
+            X_sub[i], 
+            interpolation='spline16',
+            cmap=plt.get_cmap('RdYlGn_r'))
+        im.set_clim(vmin=0, vmax=1)
+        title_ = ''
+
+        if arr_ids is not None:
+            title_ =  "id: {0}".format(arr_ids_sub[i])
+
+        if arr_labels is not None:
+            if title_ == '':
+                title_ =  "label: {0}".format(arr_labels_sub[i])
+            else:
+                title_ +=  ", label: {0}".format(arr_labels_sub[i])
+
+        if arr_mse is not None:
+            if title_ == '':
+                title_ =  "MSE {0:.3g}".format(arr_mse_sub[i])   
+            else:
+                title_ +=  ", MSE {0:.3g}".format(arr_mse_sub[i])
+        if title_ != '':    
+            ax.set_title(title_, size=title_size)
+    
+    # Colorbar
+    ax.cax.colorbar(im)
+    ax.cax.toggle_label(True)
+    
+    if category is not None:
+        fig.suptitle("Class ID {0}".format(category), fontsize=20, fontweight=0, color='black', style='italic', y=1.02)
+
+    plt.show()  
+
+
+def mgcVizMseDistribution(mse, outlier_ts=None, inlier_ts=None, figsize=(10,10), title_size=10):
+    """
+    viz the distribution of reconstruction error(or like)
+    @mse <1d np.array>: the data to viz
+    @outlier_ts <float>: the threshold value of outliers
+    @inlier_ts <float>: the threshold value of inliers
+    """
 
 
 
+    def plt_hist(mse, ax=None, title_size=10):
 
+        ts_mse = pd.Series(mse.flatten())
+        if ax == None:
+            fig = plt.figure(figsize=(14,7))
+            ax = fig.add_subplot(111)
 
+        ax.hist(pd.Series(mse.flatten()), alpha=0.9, histtype='step', fill=False, stacked=False, bins=20, log=False)
+        ax.set_title("Deviation Histogram", fontsize = title_size)
+        ax.set_xlabel("deviation degree", color = 'red', fontsize=24)
+        ax.set_ylabel("frequency", color = 'gray', fontsize=24)
+        ax.tick_params(axis='x', colors='black', labelsize=24)
+        ax.tick_params(axis='y', colors='red', labelsize=24)
+        ax.grid(True)
 
+    def plot_scatter(mse, ax=None, title_size=10):
+        if ax == None:
+            fig = plt.figure(figsize=(14,7))
+            ax = fig.add_subplot(111)
+        ax.plot(list(range(len(mse))), mse, marker='o', ms=3.5, linestyle='',alpha = 0.05)
+        if outlier_ts is not None:
+            ax.hlines(outlier_ts, ax.get_xlim()[0], ax.get_xlim()[1], colors="r", zorder=100, label='outlier_ts')
+        if inlier_ts is not None:
+            ax.hlines(inlier_ts, ax.get_xlim()[0], ax.get_xlim()[1], colors="g", zorder=100, label='inlier_ts')
+        ax.legend()
+        ax.set_ylabel("reconstruction error",  color = 'gray', fontsize=24)
+        ax.set_xlabel("data point index",  color = 'black', fontsize=24)
+        ax.set_title("Reconstruction Error Scatter", fontsize = title_size)
 
+    fig, axs = plt.subplots(nrows=2, ncols=1, figsize=figsize)
+
+    plot_scatter(mse, axs[0])
+    plt_hist(mse, axs[1])
+
+    plt.tight_layout()
+    plt.show()
