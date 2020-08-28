@@ -134,7 +134,7 @@ def mgcMultiHeat(**kwargs):
         if n_images < n_samples:
             idx_selected = np.random.choice(n_samples, nrows*ncols, replace=False)
         else:
-            idx_selected = np.array(list(range(n_images)))
+            idx_selected = np.array(list(range(n_samples)))
     else:
         idx_selected = np.array(list(range(n_images)))
     
