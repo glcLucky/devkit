@@ -98,7 +98,6 @@ def mgcMultiHeat(**kwargs):
 
     from mpl_toolkits.axes_grid1 import ImageGrid
     import numpy as np
-
     def_kwargs = {
         'X': None,
         'arr_mse': None,
@@ -127,16 +126,21 @@ def mgcMultiHeat(**kwargs):
     title_size = kwargs['title_size']
     nrows = kwargs['nrows']
     ncols = kwargs['ncols']
-
+   
     n_samples = len(X)
     n_images = nrows*ncols
+
+    nrows = min(int(np.ceil(n_samples / ncols)), nrows)
+
     if set_random:
         if n_images < n_samples:
             idx_selected = np.random.choice(n_samples, nrows*ncols, replace=False)
         else:
+
             idx_selected = np.array(list(range(n_samples)))
+            
     else:
-        idx_selected = np.array(list(range(n_images)))
+        idx_selected = np.array(list(range(min(n_images, n_samples))))
     
     X_sub = X[idx_selected]
 
@@ -172,6 +176,8 @@ def mgcMultiHeat(**kwargs):
         )
 
     for i, ax in enumerate(gird):
+        if i >= n_samples:
+            break
         im = ax.imshow(
             X_sub[i], 
             interpolation='spline16',
