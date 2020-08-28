@@ -104,6 +104,7 @@ def mgcMultiHeat(**kwargs):
         'arr_mse': None,
         'arr_ids': None, # the ID of each image belonging to
         'arr_labels':None,  # the label of each image belonging to
+        'arr_prob1': None,
         'category': None,
         'set_random': False,
         'figsize': (20, 10),
@@ -118,6 +119,7 @@ def mgcMultiHeat(**kwargs):
     X = kwargs['X']
     arr_mse = kwargs['arr_mse']
     arr_ids = kwargs['arr_ids']
+    arr_prob1 = kwargs['arr_prob1']
     arr_labels = kwargs['arr_labels']
     category = kwargs['category']
     set_random= kwargs['set_random']
@@ -127,11 +129,14 @@ def mgcMultiHeat(**kwargs):
     ncols = kwargs['ncols']
 
     n_samples = len(X)
-
+    n_images = nrows*ncols
     if set_random:
-        idx_selected = np.random.choice(n_samples, nrows*ncols, replace=False)
+        if n_images < n_samples:
+            idx_selected = np.random.choice(n_samples, nrows*ncols, replace=False)
+        else:
+            idx_selected = np.array(list(range(n_images)))
     else:
-        idx_selected = np.array(list(range(ncols*nrows)))
+        idx_selected = np.array(list(range(n_images)))
     
     X_sub = X[idx_selected]
 
@@ -185,9 +190,15 @@ def mgcMultiHeat(**kwargs):
 
         if arr_mse is not None:
             if title_ == '':
-                title_ =  "MSE {0:.3g}".format(arr_mse_sub[i])   
+                title_ =  "MSE {0:.3f}".format(arr_mse_sub[i])   
             else:
-                title_ +=  ", MSE {0:.3g}".format(arr_mse_sub[i])
+                title_ +=  ", MSE {0:.3f}".format(arr_mse_sub[i])
+
+        if arr_prob1 is not None:
+            if title_ == '':
+                title_ =  "PROB1 {0:.3f}".format(arr_prob1[i])   
+            else:
+                title_ +=  ", PROB1 {0:.3f}".format(arr_prob1[i])
         if title_ != '':    
             ax.set_title(title_, size=title_size)
     
@@ -235,7 +246,8 @@ def mgcVizMseDistribution(mse, outlier_ts=None, inlier_ts=None, figsize=(10,10),
             ax.hlines(outlier_ts, ax.get_xlim()[0], ax.get_xlim()[1], colors="r", zorder=100, label='outlier_ts')
         if inlier_ts is not None:
             ax.hlines(inlier_ts, ax.get_xlim()[0], ax.get_xlim()[1], colors="g", zorder=100, label='inlier_ts')
-        ax.legend()
+        if outlier_ts or inlier_ts:
+            ax.legend()
         ax.set_ylabel("reconstruction error",  color = 'gray', fontsize=24)
         ax.set_xlabel("data point index",  color = 'black', fontsize=24)
         ax.set_title("Reconstruction Error Scatter", fontsize = title_size)
