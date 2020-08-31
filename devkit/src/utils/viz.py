@@ -163,21 +163,8 @@ def mgcMultiHeat(**kwargs):
 
     fig = plt.figure(figsize=figsize)
 
-    gird = ImageGrid(
-        fig,
-        111,
-        nrows_ncols=(nrows, ncols),
-        axes_pad=0.45,
-        share_all=True,
-        cbar_location='right',
-        cbar_mode='signle',
-        cbar_size='7%',
-        cbar_pad=0.15,        
-        )
-
-    for i, ax in enumerate(gird):
-        if i >= n_samples:
-            break
+    for i in range(min(n_samples, n_images)):
+        ax = fig.add_subplot(nrows, ncols, i+1)
         im = ax.imshow(
             X_sub[i], 
             interpolation='spline16',
@@ -208,13 +195,10 @@ def mgcMultiHeat(**kwargs):
         if title_ != '':    
             ax.set_title(title_, size=title_size)
     
-    # Colorbar
-    ax.cax.colorbar(im)
-    ax.cax.toggle_label(True)
-    
     if category is not None:
-        fig.suptitle("Class ID {0}".format(category), fontsize=20, fontweight=0, color='black', style='italic', y=1.02)
-
+        fig.suptitle("Class ID {0}".format(category), fontsize=20, fontweight=0, color='black', style='italic', y=0.95)
+    cax = fig.add_axes([1, 0.1, 0.01, 0.8])
+    fig.colorbar(im, cax=cax)
     plt.show()  
 
 
