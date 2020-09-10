@@ -108,6 +108,9 @@ def mgcMultiHeat(**kwargs):
         'set_random': False,
         'figsize': (20, 10),
         'title_size': 5,
+        'subtitle_size': 20,
+        'subtitle_y': 0.9,
+        'include_colorbar': True,
         'nrows': 7,
         'ncols': 5,
     }
@@ -124,6 +127,9 @@ def mgcMultiHeat(**kwargs):
     set_random= kwargs['set_random']
     figsize = kwargs['figsize']
     title_size = kwargs['title_size']
+    subtitle_size = kwargs['subtitle_size']
+    subtitle_y = kwargs['subtitle_y']
+    include_colorbar = kwargs['include_colorbar']
     nrows = kwargs['nrows']
     ncols = kwargs['ncols']
    
@@ -196,9 +202,16 @@ def mgcMultiHeat(**kwargs):
             ax.set_title(title_, size=title_size)
     
     if category is not None:
-        fig.suptitle("Class ID {0}".format(category), fontsize=20, fontweight=0, color='black', style='italic', y=0.95)
-    cax = fig.add_axes([1, 0.1, 0.01, 0.8])
-    fig.colorbar(im, cax=cax)
+        fig.suptitle(
+            "Class ID {0}".format(category),
+            fontsize=subtitle_size,
+            fontweight=0,
+            color='black',
+            style='italic',
+            y=subtitle_y)
+    if include_colorbar:
+        cax = fig.add_axes([1, 0.1, 0.01, 0.8])
+        fig.colorbar(im, cax=cax)
     plt.show()  
 
 
