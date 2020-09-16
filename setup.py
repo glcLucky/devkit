@@ -5,6 +5,10 @@ DESCRIPTION = "Toolkit for machine learning development"
 # Required packages
 # full tensorflow is too big for readthedocs's builder
 REQUIRES = [
+    'seaborn',
+    'matplotlib',
+    'pandas',
+    'numpy',
     # "numpy>=1.14",
     # "scipy>=1.1.0",
     # "networkx>=2.2",
