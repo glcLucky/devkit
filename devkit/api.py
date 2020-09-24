@@ -18,6 +18,8 @@ from . src.utils.viz import plot_feature_importances
 from .src.utils.viz import mgcMultiHeat
 from .src.utils.viz import mgcVizMseDistribution
 
+from .src.utils.viz import plot_cluster_representation
+
 # confusion matrix
 from . src.utils.model import make_confusion_matrix
 from . src.utils.model import Hinton_mat

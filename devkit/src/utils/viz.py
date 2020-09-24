@@ -96,7 +96,6 @@ def mgcMultiHeat(**kwargs):
     @arr_mse <1d np.array>: 
     """
 
-    from mpl_toolkits.axes_grid1 import ImageGrid
     import numpy as np
     def_kwargs = {
         'X': None,
@@ -262,3 +261,51 @@ def mgcVizMseDistribution(mse, outlier_ts=None, inlier_ts=None, figsize=(10,10),
 
     plt.tight_layout()
     plt.show()
+
+
+def plot_cluster_representation(arr_data, arr_labels, **kwrags):
+    """
+    plot cluster representation images by cluster
+    @arr_data <3d array>: (nsamples, nkpis, nhours)
+    @arr_label <1d array>: labels
+    @method <str>: 'median', 'mean'
+    """
+    import matplotlib.pyplot as plt
+    import numpy as np
+    
+    def_kwargs = {
+        'method': 'median',
+        'ncols': 4,
+        'suptitle': None,
+        'y_suptitle': 0.92,
+    }
+
+    for k,v in def_kwargs.items():
+        kwrags.setdefault(k, v)
+    
+    method = kwrags['method']
+    ncols = kwrags['ncols']
+    suptitle = kwrags['suptitle']
+    y_suptitile = kwrags['y_suptitle']
+
+    dic_method = {
+        'median': np.median,
+        'mean': np.mean
+    }
+    selcted_clusters = np.unique(arr_labels)
+
+    nrows = int(np.ceil(len(selcted_clusters) / ncols))
+    figsize = (ncols*5, nrows*5)
+
+    fig = plt.figure(figsize=figsize)
+    for i,v in enumerate(selcted_clusters):
+        ax = fig.add_subplot(nrows, ncols, i+1)
+        class_indx = np.where(arr_labels == v)[0]
+        ax.imshow(
+            dic_method[method](arr_data[class_indx], axis=0),
+            interpolation='spline16',
+            cmap=plt.get_cmap('RdYlGn_r'))
+        ax.set_title("cluster: {}, #: {}".format(v, len(class_indx)))
+
+    if len(suptitle) > 0:
+        fig.suptitle("{}, method={}".format(suptitle, method), y=y_suptitile)    
