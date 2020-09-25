@@ -25,3 +25,7 @@ from . src.utils.model import make_confusion_matrix
 from . src.utils.model import Hinton_mat
 
 from . src.utils.model import clustering_accuracy
+
+
+# mgc Multiclassed Classfication
+from . src.mgcMulticlass import mgcplot
