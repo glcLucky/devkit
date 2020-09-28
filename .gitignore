@@ -88,16 +88,16 @@ target/
 # Mypy cache
 .mypy_cache/
 
-!data/
-data/*
-!models/
-!reports/
-reports/*
-!docs/
-docs/*
-!notebooks/
-notebooks/*
-!notebooks/final_notebooks/
-/notebooks/final_notebooks/.ipynb_checkpoints/*
-!notebooks/dev_notebooks/
-notebooks/dev_notebooks/.ipynb_checkpoints/*
+!devkit/data/
+devkit/data/*
+!devkit/models/
+!devkit/reports/
+devkit/reports/*
+!devkit/docs/
+!devkit/notebooks/
+devkit/notebooks/*
+!devkit/notebooks/final_notebooks/*.ipynb
+devkit/final_notebooks/output/*
+devkit/notebooks/final_notebooks/.ipynb_checkpoints/*
+!devkit/notebooks/dev_notebooks/*.ipynb
+devkit/notebooks/dev_notebooks/.ipynb_checkpoints/*

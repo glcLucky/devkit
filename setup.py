@@ -30,7 +30,7 @@ setup(
     install_requires=REQUIRES,
     packages = find_packages(),
     include_package_data=True,
-    package_data = {'': ['*.zip']},
+    # package_data = {'': ['*.zip']},
     zip_safe = False,
     #--------------------------------------------------------------------------
     #  MODIFY: Remove this and delete the file if not required.

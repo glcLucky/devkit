@@ -51,7 +51,8 @@ import sys
 import re
 from io import StringIO
 
-import mgctrain.resnet as resnet
+from . import resnet
+
 #import mgctrain.densenet
 
 from keras import backend as K
@@ -381,6 +382,168 @@ def mgcNetArchStride2(outLayer, l2_val, **kwargs):
 
     return model
 
+
+## Basic CNN with stride of 2 instead of max pooling    
+def mgcNetArchStride2Mini(outLayer, l2_val, **kwargs):
+    
+    """
+    CNN architecture - without maximum pooling (replaced by convolutional layer of stride 2)
+    Network architecture summary and plot
+    The output layers, either multiple layer perceptron network or maximum pooling
+    Return end-to-end network architecture to be compiled and trained
+    
+    Argumnents:
+        input_img_rows: horizontal dimension in pixel of input image
+        input_img_cols:vertical dimension in pixel of input image
+        channels: number of colour channel
+        nb_classes: number of unique classification class exist in the dataset target
+    """
+
+    def_vals = {"input_img_rows" : 72,
+                "input_img_cols" : 72,
+                "channels" : 1,
+                "nb_classes" : 13
+               } # default parameters value
+
+    for k, v in def_vals.items():
+        kwargs.setdefault(k, v)
+
+    input_img_rows = kwargs['input_img_rows']
+    input_img_cols = kwargs['input_img_cols']
+    channels = kwargs['channels']
+    nb_classes = kwargs['nb_classes']
+
+    
+    # Input: 72 x 72 x 1
+    img_shape = layers.Input(shape = (input_img_rows, input_img_cols, channels))
+
+    # Layer 1
+    #------------------------
+    conv1 = layers.Conv2D(filters=4, kernel_size=(2, 2), padding='same', kernel_regularizer=regularizers.l2(l2_val))(img_shape)
+    conv1 = layers.Activation('relu')(conv1)
+    conv1 = layers.MaxPooling2D(pool_size=(2, 2))(conv1)
+    conv1 = layers.Dropout(0.4)(conv1)
+
+    # Layer 2
+    #------------------------
+    conv2 = layers.Conv2D(filters=8, kernel_size=(2,2), padding='same', kernel_regularizer=regularizers.l2(l2_val))(conv1)
+    conv2 = layers.Activation('relu')(conv2)   
+    conv2 = layers.Conv2D(filters=8, kernel_size=(2,2), padding='same', activation='relu', strides = 2)(conv2)
+    conv2 = layers.Dropout(0.4)(conv2)
+
+    # Layer 3
+    #------------------------
+    conv3 = layers.Conv2D(filters=16, kernel_size=(2,2), padding='same', kernel_regularizer=regularizers.l2(l2_val))(conv2)
+    conv3 = layers.Activation('relu')(conv3)   
+    conv3 = layers.Conv2D(filters=8, kernel_size=(2,2), padding='same', activation='relu', strides = 2)(conv3)
+    conv3 = layers.Dropout(0.4)(conv3)
+
+    # Layer 4
+    #------------------------
+    conv4 = layers.Conv2D(filters=32, kernel_size=(2,2), padding='same', dilation_rate = (2, 2), kernel_regularizer=regularizers.l2(l2_val))(conv3)
+    conv4 = layers.Activation('relu')(conv4)
+    conv4 = layers.Conv2D(filters=16, kernel_size=(2,2), padding='same', activation='relu', strides = 2)(conv4)
+    conv4 = layers.Dropout(0.4)(conv4)
+
+    # Layer 5
+    #------------------------
+    output = layers.Conv2D(filters=32, kernel_size=(2,2), padding='same', kernel_regularizer=regularizers.l2(l2_val))(conv3) # skip layer 4
+    output = layers.Activation('relu')(output)
+    output = layers.Conv2D(filters=16, kernel_size=(2,2), padding='same', activation='relu', strides = 2)(output)    
+    output = layers.Dropout(0.4)(output)
+
+            
+    # FC Layer
+    #------------------------
+    outputmlp = layers.Flatten()(output)
+    outputmlp = layers.Dense(16, activation = 'relu')(outputmlp)
+    outputmlp = layers.Dropout(0.5)(outputmlp)
+
+    predictionsMlp = layers.Dense(nb_classes, activation='softmax')(outputmlp)
+    
+    
+    # global averaging
+    weight_decay=1E-4
+    concat_axis = 1
+    
+    x = BatchNormalization(axis=concat_axis,
+                           gamma_regularizer=regularizers.l2(weight_decay),
+                           beta_regularizer=regularizers.l2(weight_decay))(output)
+    x = Activation('relu')(x)
+    x = layers.Dropout(0.4)(x)
+    x = GlobalAveragePooling2D(data_format=K.image_data_format())(x)
+    
+    predictionsGloAvg = layers.Dense(nb_classes,
+                        activation='softmax',
+                        kernel_regularizer=regularizers.l2(weight_decay),
+                        bias_regularizer=regularizers.l2(weight_decay))(x)
+    
+    if outLayer == "gloAvg":
+        predictions = predictionsGloAvg
+    elif outLayer == "mlp":
+        predictions = predictionsMlp
+        
+    # prediction model
+    model = Model(img_shape, predictions, name = 'cnn_stride2')
+
+    return model
+
+
+## Basic CNN with stride of 2 instead of max pooling    
+def mgcNetArchCommonCnn(outLayer, l2_val, **kwargs):
+    
+    """
+    CNN architecture - without maximum pooling (replaced by convolutional layer of stride 2)
+    Network architecture summary and plot
+    The output layers, either multiple layer perceptron network or maximum pooling
+    Return end-to-end network architecture to be compiled and trained
+    
+    Argumnents:
+        input_img_rows: horizontal dimension in pixel of input image
+        input_img_cols:vertical dimension in pixel of input image
+        channels: number of colour channel
+        nb_classes: number of unique classification class exist in the dataset target
+    """
+    def_vals = {"input_img_rows" : 72,
+                "input_img_cols" : 72,
+                "channels" : 1,
+                "nb_classes" : 13
+               } # default parameters value
+
+    for k, v in def_vals.items():
+        kwargs.setdefault(k, v)
+
+    input_img_rows = kwargs['input_img_rows']
+    input_img_cols = kwargs['input_img_cols']
+    channels = kwargs['channels']
+    nb_classes = kwargs['nb_classes']
+
+    
+    # Input: 72 x 72 x 1
+    img_shape = layers.Input(shape = (input_img_rows, input_img_cols, channels))
+
+    # Layer 1
+    #------------------------
+    conv1 = layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu')(img_shape)
+    conv1 = layers.MaxPooling2D(pool_size=(2, 2))(conv1)
+
+    # Layer 2
+    #------------------------
+    conv2 = layers.Conv2D(filters=64, kernel_size=(3,3), activation='relu')(conv1)
+    conv2 = layers.MaxPooling2D(pool_size=(2, 2))(conv2)
+
+    # FC Layer
+    #------------------------
+    out = layers.Flatten()(conv2)
+    out = layers.Dropout(0.5)(out)
+    out = layers.Dense(nb_classes, activation='softmax')(out)
+    
+    # prediction model
+    model = Model(img_shape, out, name = 'common_cnn')
+
+    return model
+
+
 def mgcNetArchSkip(outLayer, l2_val, **kwargs):
     
     """
@@ -464,6 +627,121 @@ def mgcNetArchSkip(outLayer, l2_val, **kwargs):
     #------------------------
     outputmlp = layers.Flatten()(output)
     outputmlp = layers.Dense(64, activation = 'relu')(outputmlp)
+    outputmlp = layers.Dropout(0.5)(outputmlp)
+
+    predictionsMlp = layers.Dense(nb_classes, activation='softmax')(outputmlp)
+    
+    
+    # global averaging
+    weight_decay=1E-4
+    concat_axis = 1
+    
+    x = BatchNormalization(axis=concat_axis,
+                           gamma_regularizer=regularizers.l2(weight_decay),
+                           beta_regularizer=regularizers.l2(weight_decay))(output)
+    x = Activation('relu')(x)
+    x = layers.Dropout(0.4)(x)
+    x = GlobalAveragePooling2D(data_format=K.image_data_format())(x)
+    
+    predictionsGloAvg = layers.Dense(nb_classes,
+                        activation='softmax',
+                        kernel_regularizer=regularizers.l2(weight_decay),
+                        bias_regularizer=regularizers.l2(weight_decay))(x)
+    
+    if outLayer == "gloAvg":
+        predictions = predictionsGloAvg
+    elif outLayer == "mlp":
+        predictions = predictionsMlp
+        
+    # prediction model
+    model = Model(img_shape, predictions, name = 'skipconnect')
+
+    return model
+
+
+def mgcNetArchSkipMini(outLayer, l2_val, **kwargs):
+    
+    """
+    CNN architecture - without maximum pooling (replaced by convolutional layer of stride 2)
+    Network architecture summary and plot
+    The output layers, either multiple layer perceptron network or maximum pooling
+    Return end-to-end network architecture to be compiled and trained
+    
+    Argumnents:
+        input_img_rows: horizontal dimension in pixel of input image
+        input_img_cols:vertical dimension in pixel of input image
+        channels: number of colour channel
+        nb_classes: number of unique classification class exist in the dataset target
+    """
+
+    def_vals = {"input_img_rows" : 72,
+                "input_img_cols" : 72,
+                "channels" : 1,
+                "nb_classes" : 13
+               } # default parameters value
+
+    for k, v in def_vals.items():
+        kwargs.setdefault(k, v)
+
+    input_img_rows = kwargs['input_img_rows']
+    input_img_cols = kwargs['input_img_cols']
+    channels = kwargs['channels']
+    nb_classes = kwargs['nb_classes']
+
+    
+    # Input: 72 x 72 x 1
+    img_shape = layers.Input(shape = (input_img_rows, input_img_cols, channels))
+
+    # Layer 1
+    #------------------------
+    conv1 = layers.Conv2D(filters=8, kernel_size=(2, 2), padding='same', kernel_regularizer=regularizers.l2(l2_val))(img_shape)
+    conv1 = layers.Activation('relu')(conv1)
+    conv1 = layers.MaxPooling2D(pool_size=(2, 2))(conv1)
+    conv1 = layers.Dropout(0.4)(conv1)
+
+    # Layer 2
+    #------------------------
+    conv2 = layers.Conv2D(filters=16, kernel_size=(2,2), padding='same', kernel_regularizer=regularizers.l2(l2_val))(conv1)
+    conv2 = layers.Activation('relu')(conv2)   
+    conv2 = layers.Conv2D(filters=64, kernel_size=(2,2), padding='same', activation='relu', strides = 2)(conv2)
+    conv2 = layers.Dropout(0.4)(conv2)
+
+    # Layer 3
+    #------------------------
+    conv3 = layers.Conv2D(filters=16, kernel_size=(2,2), padding='same', kernel_regularizer=regularizers.l2(l2_val))(conv2)
+    conv3 = layers.Activation('relu')(conv3)   
+    conv3 = layers.Conv2D(filters=16, kernel_size=(2,2), padding='same', activation='relu', strides = 2)(conv3)
+    conv3 = layers.Dropout(0.4)(conv3)
+    
+    # skip connect 1
+    #shortcut_layer = layers.Conv2D(filters=64, kernel_size=(1,1), padding='same', activation='relu', strides = 4)(conv1)
+    shortcut_layer = layers.Conv2D(filters=16, kernel_size=(1,1), padding='same', activation='relu', strides = 8)(img_shape)
+        
+    conv3 = layers.add([shortcut_layer, conv3])
+    #conv3 = layers.Concatenate()([shortcut_layer,conv3])    
+
+    # Layer 4
+    #------------------------
+    conv4 = layers.Conv2D(filters=32, kernel_size=(2,2), padding='same', dilation_rate = (2, 2), kernel_regularizer=regularizers.l2(l2_val))(conv3)
+    conv4 = layers.Activation('relu')(conv4)
+    conv4 = layers.Conv2D(filters=16, kernel_size=(2,2), padding='same', activation='relu', strides = 2)(conv4)
+    conv4 = layers.Dropout(0.4)(conv4)
+
+    # Layer 5
+    #------------------------
+    output = layers.Conv2D(filters=32, kernel_size=(2,2), padding='same', kernel_regularizer=regularizers.l2(l2_val))(conv3) # skip layer 4
+    output = layers.Activation('relu')(output)
+    output = layers.Conv2D(filters=32, kernel_size=(2,2), padding='same', activation='relu', strides = 2)(output)    
+    output = layers.Dropout(0.4)(output)
+    
+    # skip connect 2
+    shortcut_layer2 = layers.Conv2D(filters=32, kernel_size=(1,1), padding='same', activation='relu', strides = 2)(conv3)
+    output = layers.add([shortcut_layer2, output])
+    
+    # FC Layer
+    #------------------------
+    outputmlp = layers.Flatten()(output)
+    outputmlp = layers.Dense(32, activation = 'relu')(outputmlp)
     outputmlp = layers.Dropout(0.5)(outputmlp)
 
     predictionsMlp = layers.Dense(nb_classes, activation='softmax')(outputmlp)
@@ -806,7 +1084,7 @@ class mgcNeuralNet(object):
             return def_val
         
         def_val = paraChck(**kwargs)
-        
+
         class Bunch(object):
             def __init__(self, adict):
                 self.__dict__.update(adict)
@@ -848,7 +1126,7 @@ class mgcNeuralNet(object):
             net_architr: cnn_max, cnn_stride or net_in_net
             
         """
-        
+
         def_vals = {"input_img_rows" : self.input_img_rows,
                     "input_img_cols" : self.input_img_cols,
                     "channels" : self.channels,
@@ -882,12 +1160,17 @@ class mgcNeuralNet(object):
                  }
          
         print(_net_architr)
-        
         if _net_architr == 'cnn_max':
             model = mgcNetArchMax(outLayer = _outLayer, l2_val = _l2_val, **params)
             
         elif _net_architr == 'cnn_stride':
             model = mgcNetArchStride2(outLayer = _outLayer, l2_val = _l2_val, **params)
+
+        elif _net_architr == 'cnn_stride_mini':
+            model = mgcNetArchStride2Mini(outLayer = _outLayer, l2_val = _l2_val, **params)
+
+        elif _net_architr == 'common_cnn':
+            model = mgcNetArchCommonCnn(outLayer = _outLayer, l2_val = _l2_val, **params)
             
         elif _net_architr == 'net_in_net':
             model = mgcNetArchNin(outLayer = _outLayer, l2_val = _l2_val, **params)
@@ -900,6 +1183,8 @@ class mgcNeuralNet(object):
 
         elif _net_architr == 'skipconnect':
             model = mgcNetArchSkip(outLayer = _outLayer, l2_val = _l2_val, **params)
+        elif _net_architr == 'skipconnect_mini':
+            model = mgcNetArchSkipMini(outLayer = _outLayer, l2_val = _l2_val, **params)
         
         self.model = model
         self.plot_model = SVG(model_to_dot(model, show_shapes = True).create(prog='dot', format='svg'))
@@ -1029,7 +1314,7 @@ class mgcNeuralNet(object):
         #callbacks_list = [checkpoint, csv_logger, tensorb, lr_reducer, early_stopper]
         
         # output training history, reduce learning rate, early stopping and prediction at the end of each epoch
-        callbacks_list = [checkpoint, csv_logger, tensorb, lr_reducer, early_stopper, prediction_epoch]
+        callbacks_list = [checkpoint, csv_logger, tensorb, lr_reducer, early_stopper]
         #callbacks_list = [checkpoint, csv_logger, tensorb, lr_reducer]
         
             
@@ -1037,6 +1322,7 @@ class mgcNeuralNet(object):
         np.random.seed(seed)
         
         start_t = time.time()
+        # import ipdb; ipdb.set_trace()
         self.history = self.model.fit(self.x_train, self.y_train, epochs=self.nb_epoch, batch_size=self.batch_size,
                             validation_data=(self.x_test, self.y_test), verbose=2, shuffle=True, callbacks=callbacks_list)
 

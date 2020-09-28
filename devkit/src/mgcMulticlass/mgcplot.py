@@ -5,9 +5,8 @@ import pandas as pd
 import random
 from plotly import tools
 from plotly.offline import download_plotlyjs, init_notebook_mode, iplot, plot 
-import plotly.figure_factory as ff
+
 import plotly.graph_objs as go
-import plotly.plotly as py
 import plotly.tools as tls
 
 import matplotlib.pyplot as plt
@@ -19,7 +18,7 @@ import re
 from io import StringIO
 
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.metrics import roc_curve, auc
+
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, cohen_kappa_score, accuracy_score
 from sklearn.metrics import precision_recall_fscore_support as score
@@ -422,7 +421,8 @@ def confs_mat_plot(**kwargs):
     
     """
 
-    
+    import plotly.figure_factory as ff
+
     # label dimension
     n_label = 10
     
@@ -687,7 +687,8 @@ def roc_plot(**kwargs):
         
     """
    
-
+    from sklearn.metrics import roc_curve, auc
+    
     # label dimension
     n_label = 10
     

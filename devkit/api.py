@@ -28,4 +28,5 @@ from . src.utils.model import clustering_accuracy
 
 
 # mgc Multiclassed Classfication
-from . src.mgcMulticlass import mgcplot
+from . src.mgcMulticlass.mgcplot import Mgcplot
+from . src.mgcMulticlass.mgctrain.mgcneuralnet import mgcNeuralNet
