@@ -607,7 +607,7 @@ def dens_hist_plot(**kwargs):
         x=x, y=y, mode='markers', name='points',
         marker=dict(color='rgb(102,0,0)', size=2, opacity=0.4)
     )
-    trace2 = go.Histogram2dcontour(
+    trace2 = go.Histogram2dContour(
         x=x, y=y, name='density', ncontours=20,
         colorscale='Hot', reversescale=True, showscale=False
     )
@@ -1087,7 +1087,7 @@ def top3(
         arr_y_pred = df_y_pred.values  # transform to numpy array y_pred_probdf_y_pred
 
         order = np.argsort(-arr_y_pred, axis=1)[:, :nlargest]
-        result = pd.DataFrame(df_y_pred.columns[order],
+        result = pd.DataFrame(np.array(df_y_pred.columns)[order],
                               columns=['top{}'.format(i)
                                        for i in range(1, nlargest+1)],
                               index=df_y_pred.index)
@@ -1544,7 +1544,6 @@ class Mgcplot():
         self.dict_label2 = kwargs['dict_label2']                
         self.input_branch = kwargs['input_branch']
         
-
         self.y_pred = np.argmax(self.y_pred_prob, axis=1)
         
         # default label dictionary if users do not provide
@@ -1621,33 +1620,34 @@ class Mgcplot():
         self.class_rpt_top1 = []
         self.class_rpt_top2 = []
         self.class_rpt_top3 = []            
-            
-        for i in range(len(self.dict_label_c)):
-            if len(self.dict_label_c[i]) < 4:
-                class_rpttop1, class_rpttop2, class_rpt_top1, class_rpt_top2 = txt_to_df(self.list_top_n_class[i],
-                                                                
-                                           dict_factor_c[i],
-                                           nb_classes_c[i],
-                                           self.dict_label_c[i])
+        
+        if self.y_true is not None:
+            for i in range(len(self.dict_label_c)):
+                if len(self.dict_label_c[i]) < 4:
+                    class_rpttop1, class_rpttop2, class_rpt_top1, class_rpt_top2 = txt_to_df(self.list_top_n_class[i],
+                                                                    
+                                            dict_factor_c[i],
+                                            nb_classes_c[i],
+                                            self.dict_label_c[i])
+                    
+                    self.class_rpttop1.append(class_rpttop1)
+                    self.class_rpttop2.append(class_rpttop2)
+                    self.class_rpt_top1.append(class_rpt_top1)
+                    self.class_rpt_top2.append(class_rpt_top2)
                 
-                self.class_rpttop1.append(class_rpttop1)
-                self.class_rpttop2.append(class_rpttop2)
-                self.class_rpt_top1.append(class_rpt_top1)
-                self.class_rpt_top2.append(class_rpt_top2)
-            
-            else:
-                class_rpttop1, class_rpttop2, class_rpttop3, class_rpt_top1, class_rpt_top2, \
-                class_rpt_top3 = txt_to_df(self.list_top_n_class[i],
-                                           dict_factor_c[i],
-                                           nb_classes_c[i],
-                                           self.dict_label_c[i])
-                
-                self.class_rpttop1.append(class_rpttop1)
-                self.class_rpttop2.append(class_rpttop2)
-                self.class_rpttop3.append(class_rpttop3)
-                self.class_rpt_top1.append(class_rpt_top1)
-                self.class_rpt_top2.append(class_rpt_top2)
-                self.class_rpt_top3.append(class_rpt_top3)
+                else:
+                    class_rpttop1, class_rpttop2, class_rpttop3, class_rpt_top1, class_rpt_top2, \
+                    class_rpt_top3 = txt_to_df(self.list_top_n_class[i],
+                                            dict_factor_c[i],
+                                            nb_classes_c[i],
+                                            self.dict_label_c[i])
+                    
+                    self.class_rpttop1.append(class_rpttop1)
+                    self.class_rpttop2.append(class_rpttop2)
+                    self.class_rpttop3.append(class_rpttop3)
+                    self.class_rpt_top1.append(class_rpt_top1)
+                    self.class_rpt_top2.append(class_rpt_top2)
+                    self.class_rpt_top3.append(class_rpt_top3)
 
 
 ##########################################################
@@ -2181,6 +2181,9 @@ class Mgcplot():
         """
         density histogram
         """
+        from plotly.offline import init_notebook_mode
+        init_notebook_mode()
+
         nb_iter = len(self.dict_label_c)
         densHist = []
         for i in range(nb_iter):
