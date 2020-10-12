@@ -263,7 +263,22 @@ def mgcVizMseDistribution(mse, outlier_ts=None, inlier_ts=None, figsize=(10,10),
     plt.show()
 
 
-def plot_cluster_representation(arr_data, arr_labels, **kwrags):
+def robust_mean_repr(X, dl=0.05, ul=0.95):
+    """
+    calculate the robust mean of 2d array
+    @X <3d array>: [nsamples, weight, height]
+    """
+    dl_ = np.quantile(X, [dl], axis=0)[0]
+    ul_ = np.quantile(X, [ul], axis=0)[0]
+
+    X_ = X.copy()
+    for i in range(len(X)):
+        X_[i][X[i] > ul_] = np.nan
+        X_[i][X[i] < dl_] = np.nan
+    return np.nanmean(X_, axis=0)
+
+
+def plot_cluster_representation(arr_data, arr_labels, **kwargs):
     """
     plot cluster representation images by cluster
     @arr_data <3d array>: (nsamples, nkpis, nhours)
@@ -276,36 +291,96 @@ def plot_cluster_representation(arr_data, arr_labels, **kwrags):
     def_kwargs = {
         'method': 'median',
         'ncols': 4,
-        'suptitle': None,
+        'bigfig_step': 1,  # the number of grids occupied by big image
+        'yticklabels': '', 
+        'suptitle': '',
         'y_suptitle': 0.92,
     }
 
     for k,v in def_kwargs.items():
-        kwrags.setdefault(k, v)
+        kwargs.setdefault(k, v)
     
-    method = kwrags['method']
-    ncols = kwrags['ncols']
-    suptitle = kwrags['suptitle']
-    y_suptitile = kwrags['y_suptitle']
+    method = kwargs['method']
+    ncols = kwargs['ncols']
+    bigfig_step = kwargs['bigfig_step']
+    yticklabels = kwargs['yticklabels']
+    suptitle = kwargs['suptitle']
+    y_suptitile = kwargs['y_suptitle']
 
     dic_method = {
         'median': np.median,
         'mean': np.mean
     }
     selcted_clusters = np.unique(arr_labels)
-
-    nrows = int(np.ceil(len(selcted_clusters) / ncols))
+    
+    types_ = list(set([type(s) for s in selcted_clusters]))
+    
+    if len(types_) == 1:
+        try:
+            selcted_clusters = sorted(selcted_clusters, key=int)
+        except Exception:
+            selcted_clusters = sorted(selcted_clusters)    
+        
+    lst_data_agg = []
+    lst_cl_name = []
+    lst_cl_support = []
+    for i,v in enumerate(selcted_clusters):
+        class_indx = np.where(arr_labels == v)[0]
+        if method == 'robust_mean':
+            lst_data_agg.append(robust_mean_repr((arr_data[class_indx])))
+        else:
+            lst_data_agg.append(dic_method[method](arr_data[class_indx], axis=0))
+        lst_cl_name.append(v)
+        lst_cl_support.append(len(class_indx))
+    nrows = int(np.ceil(len(selcted_clusters) + bigfig_step*bigfig_step -1) / ncols)
     figsize = (ncols*5, nrows*5)
 
-    fig = plt.figure(figsize=figsize)
-    for i,v in enumerate(selcted_clusters):
-        ax = fig.add_subplot(nrows, ncols, i+1)
-        class_indx = np.where(arr_labels == v)[0]
-        ax.imshow(
-            dic_method[method](arr_data[class_indx], axis=0),
-            interpolation='spline16',
-            cmap=plt.get_cmap('RdYlGn_r'))
-        ax.set_title("cluster: {}, #: {}".format(v, len(class_indx)))
+    fig = plt.figure(figsize=figsize, constrained_layout=False)
+#     for i,v in enumerate(selcted_clusters):
+    gs = fig.add_gridspec(nrows=nrows, ncols=ncols, wspace=0.1, hspace=0.3)
+
+    ix = 0
+
+    ax = fig.add_subplot(gs[:bigfig_step, :bigfig_step])
+    ax.imshow(
+        lst_data_agg[ix],
+        interpolation='spline16',
+        cmap=plt.get_cmap('RdYlGn_r'))
+    if len(yticklabels) > 0:
+        ax.set_yticks(np.arange(len(yticklabels)))
+        yticklabels = [
+            "{}_{}".format(k_, i_) for( k_,i_) in zip(
+                yticklabels, range(len(yticklabels)))]
+        ax.set_yticklabels(yticklabels)
+    ax.set_title("cluster: {}, #: {}".format(lst_cl_name[ix], lst_cl_support[ix]))
+
+    ix += 1
+
+    for row_ in range(bigfig_step):
+        for col_ in range(bigfig_step, ncols):
+            ax = fig.add_subplot(gs[row_, col_])
+            ax.imshow(
+                lst_data_agg[ix],
+                interpolation='spline16',
+                cmap=plt.get_cmap('RdYlGn_r'))
+            ax.set_title("cluster: {}, #: {}".format(lst_cl_name[ix], lst_cl_support[ix]))
+            ix += 1
+            
+            if ix >= len(selcted_clusters):
+                break
+
+    for row_ in range(bigfig_step, nrows):
+        for col_ in range(ncols):
+            ax = fig.add_subplot(gs[row_, col_])
+            ax.imshow(
+                lst_data_agg[ix],
+                interpolation='spline16',
+                cmap=plt.get_cmap('RdYlGn_r'))
+            ax.set_title("cluster: {}, #: {}".format(lst_cl_name[ix], lst_cl_support[ix]))
+            ix += 1
+            
+            if ix >= len(selcted_clusters):
+                break
 
     if len(suptitle) > 0:
-        fig.suptitle("{}, method={}".format(suptitle, method), y=y_suptitile)    
+        fig.suptitle("{}, method={}".format(suptitle, method), y=y_suptitile)
