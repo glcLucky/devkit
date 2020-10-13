@@ -68,13 +68,239 @@ def data_viz(X, y=None, method='umap', **kwargs):
     else:
         raise ValueError("Unrecognized dim reduction method: {}".format(method))
     embedding_2d = reducer(X, **kwargs)
-    mgc_scatter(embedding_2d[:, 0],
-            embedding_2d[:, 1],
-            colors=y,
-            includ_colorbar=True,
-            figsize=(15, 10),
-            title={'label': '{} projection of the embedding dataset'.format(method), 'fontsize': 24})
+    mgc_scatter(
+        embedding_2d[:, 0],
+        embedding_2d[:, 1],
+        colors=y,
+        includ_colorbar=True,
+        figsize=(15, 10),
+        title={
+            'label': '{} projection of the embedding dataset'.format(
+                method), 'fontsize': 24})
 
+
+def tsne_3d(**kwargs):
+    
+    """
+    return scatter plot based on clustering
+    
+    Arguments:
+        list of key performance indicators associated with each prediction class
+    """
+    from pandas import read_csv
+    import colorlover as cl
+    from plotly.offline import download_plotlyjs, init_notebook_mode, iplot
+    init_notebook_mode()
+    import plotly.graph_objs as go
+    import plotly
+
+    # use default keyword parameters if user does not provide
+    def_vals = {'ar_plot' : None,
+                'dic_labels': None,
+                'ar_marker_size': None,
+                ''
+                'file_dir' : "", 
+                'plot_title': "Dimensionality Reduction <br>\ Latent Space"}
+
+    for k, v in def_vals.items():
+        kwargs.setdefault(k, v)
+
+    ar_plot = kwargs['ar_plot']
+    dic_labels = kwargs['dic_labels']
+    file_dir = kwargs['file_dir']
+    plot_title = kwargs['plot_title']
+    ar_marker_size = kwargs['ar_marker_size']
+    
+    if ar_marker_size is None:
+        ar_marker_size = 2 
+    def_color = ['rgb(31, 119, 180)',
+                 'rgb(255, 127, 14)',
+                 'rgb(44, 160, 44)',
+                 'rgb(214, 39, 40)',
+                 'rgb(148, 103, 189)',
+                 'rgb(140, 86, 75)',
+                 'rgb(227, 119, 194)',
+                 'rgb(127, 127, 127)',
+                 'rgb(188, 189, 34)',
+                 'rgb(23, 190, 207)']
+
+    def_color = ["rgb(230, 25, 75)", 
+                 "rgb(60, 180, 75)", 
+                 "rgb(255, 225, 25)", 
+                 "rgb(0, 130, 200)", 
+                 "rgb(245, 130, 48)", 
+                 "rgb(145, 30, 180)", 
+                 "rgb(70, 240, 240)", 
+                 "rgb(240, 50, 230)", 
+                 "rgb(210, 245, 60)", 
+                 "rgb(250, 190, 190)", 
+                 "rgb(0, 128, 128)", 
+                 "rgb(230, 190, 255)", 
+                 "rgb(170, 110, 40)", 
+                 "rgb(255, 250, 200)", 
+                 "rgb(128, 0, 0)", 
+                 "rgb(170, 255, 195)", 
+                 "rgb(128, 128, 0)", 
+                 "rgb(255, 215, 180)", 
+                 "rgb(0, 0, 128)", 
+                 "rgb(128, 128, 128)"]
+
+    # String citing the data source
+    url='chin.lam.eng@ericsson.com'
+    text_source = "Source and info: <a href=\"{}\">    docomo ai</a>".format(url)
+
+    def make_anno(x=1, y=1, text=text_source):
+        return go.layout.Annotation(
+            text=text,          # annotation text
+            showarrow=False,    # remove arrow 
+            xref='paper',     # use paper coords
+            yref='paper',     #  for both coordinates
+            xanchor='right',  # x-coord line up with right end of text 
+            yanchor='bottom', # y-coord line up with bottom end of text 
+            x=x,              # position's x-coord
+            y=y               #   and y-coord
+        )
+
+    title = plot_title  # plot's title
+
+    # Make a layout object
+    layout1 = go.Layout(
+        title=title,  # set plot's title
+        font=go.layout.Font(
+            family='PT Sans Narrow, sans-serif',  # global font
+            size=13
+        ),
+
+        scene=dict(
+            xaxis=dict(
+                title='LatentX',
+                #gridcolor='rgb(255, 255, 255)',
+                #zerolinecolor='rgb(255, 255, 255)',
+                #showbackground=True,
+                #backgroundcolor='rgb(230, 230,230)'
+            ),
+            yaxis=dict(
+                title='LatentY',
+                #gridcolor='rgb(255, 255, 255)',
+                #zerolinecolor='rgb(255, 255, 255)',
+                #showbackground=True,
+                #backgroundcolor='rgb(230, 230,230)'
+            ),
+            zaxis=dict(
+                title='LatentZ',
+                #gridcolor='rgb(255, 255, 255)',
+                #zerolinecolor='rgb(255, 255, 255)',
+                #showbackground=True,
+                #backgroundcolor='rgb(230, 230,230)'
+            ),
+        ),    
+
+        showlegend=True,  # remove legend
+        # annotations= go.Annotations([  # add annotation citing the data source
+        #     make_anno()
+        # ]),
+        #showlegend=True,  # remove legend
+        autosize=False,    # custom size
+        width=1200,         # set figure width 
+        height=800,         #  and height
+        margin=dict(l=0,
+                    r=0,
+                    b=30,
+                    t=50
+        )
+    )
+
+
+    legend=go.layout.Legend(
+        x=0.9,
+        y=0.8,
+        traceorder="normal",
+        font=dict(
+            family="sans-serif",
+            size=16,
+            color="black"
+            ),
+        bgcolor='rgba(0,0,0,0)',
+        bordercolor="Black",
+        borderwidth=2
+        )
+    
+    x, y, z, label_id = ar_plot[:,0], ar_plot[:,1], ar_plot[:,2], ar_plot[:,3]
+
+    # customize color
+    mycolormapx =[]
+    mypair = cl.scales['11']['qual']['Set3']
+    mycolormap1 = cl.interp( mypair, 22 ) # Map color scale to 500 bins
+    mycolormapx.append(mycolormap1)
+
+    mypair = cl.scales['11']['qual']['Paired']
+    mycolormap2 = cl.interp( mypair, 22 ) # Map color scale to 500 bins
+    mycolormapx.append(mycolormap2)
+
+    # flatten list of list to a single list
+    mycolormap = [item for sublist in mycolormapx for item in sublist]
+    
+    # use default color map
+    mycolormap = def_color * 10
+
+
+    ls_symbol = [
+        'circle', 'circle-open', 'square', 'square-open',
+        'diamond', 'diamond-open', 'cross'] * 10
+#     ls_symbol = ['circle', 'square', 'diamond'] * 5
+
+    ls_classi = list(dic_labels.values())
+
+    ######################################################
+    trace = []
+    for color_i, cat_i in enumerate(np.unique(label_id)):
+        ar_label_indx = np.where(label_id == cat_i)[0]
+#         import ipdb; ipdb.set_trace()
+        trace0 = go.Scatter3d(
+            x=x[ar_label_indx],
+            y=y[ar_label_indx],
+            z=z[ar_label_indx],
+            mode='markers',
+            marker=dict(
+                size=ar_marker_size,
+                # set color to an array/list of desired values
+                color=mycolormap[color_i],
+                #colorscale='Viridis',   # choose a colorscale Viridis
+                #line = {'width' : 0.2, 'color' : 'rgba(255,255,255, 0.2)'},
+                opacity=0.6,
+                sizeref=20,
+                sizemode='diameter',
+                symbol=ls_symbol[color_i]
+            ),
+            text="class" + str(int(cat_i)).zfill(2),
+            name=dic_labels[cat_i]  # "class" + str(int(cat_i)).zfill(2)
+        )
+        trace.append(trace0)
+    ########################################################
+    data = trace
+
+    #
+    layout = go.Layout(showlegend=True)
+
+    fig = go.Figure(data=data, layout=layout1)
+    #fig = go.Figure(data = data)
+    fig['layout'].update({'legend' : legend})
+    iplot(
+        fig,
+        config={
+            'modeBarButtonsToRemove': ['sendDataToCloud'],
+            'showLink': False, 'displaylogo' : False})
+    #iplot(fig,  show_link=False, config={'modeBarButtonsToRemove': ['sendDataToCloud'], 'showLink': False, 'displaylogo' : False})
+    #plot(fig, filename='network_predic.html', show_link=False, config={'modeBarButtonsToRemove': ['sendDataToCloud'], 'showLink': False, 'displaylogo' : False})
+
+    # save plot to html
+    if len(file_dir) > 0:
+#         filename = file_dir + '_{0}.html'.format(datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+        fig.write_html(
+            file_dir,
+            config={
+                'modeBarButtonsToRemove': ['sendDataToCloud'],
+                'showLink': False, 'displaylogo' : False})
 
 def plot_feature_importances(feat_imp, feat_labels, nlargest=10, fontsize=20, color_map="RdYlGn"):
     """
