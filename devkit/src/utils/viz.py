@@ -34,7 +34,7 @@ def umap_reducer(X, n_components=2, **kwargs):
     """
     from umap import UMAP
     assert len(X.shape) == 2
-    umap_reducer = UMAP(n_components=2, **kwargs)
+    umap_reducer = UMAP(n_components=n_components, **kwargs)
     umap_embedding = umap_reducer.fit_transform(X)
     return umap_embedding
 
