@@ -94,10 +94,10 @@ devkit/data/*
 !devkit/reports/
 devkit/reports/*
 !devkit/docs/
-!devkit/notebooks/
-devkit/notebooks/*
+# !devkit/notebooks/
+devkit/notebooks/final_notebooks/*
 !devkit/notebooks/final_notebooks/*.ipynb
-devkit/final_notebooks/output/*
-devkit/notebooks/final_notebooks/.ipynb_checkpoints/*
-!devkit/notebooks/dev_notebooks/*.ipynb
-devkit/notebooks/dev_notebooks/.ipynb_checkpoints/*
+# devkit/final_notebooks/output/*
+# devkit/notebooks/final_notebooks/.ipynb_checkpoints/*
+# !devkit/notebooks/dev_notebooks/*.ipynb
+# devkit/notebooks/dev_notebooks/.ipynb_checkpoints/*
