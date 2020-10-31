@@ -776,7 +776,7 @@ def roc_plot(**kwargs):
         fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_score[:, i])
         roc_auc = auc(fpr[i], tpr[i])
         col_map = pd.Series(i).map(dict_color)[0]
-
+        # if np.isnan(col_map).sum() > 0:
         traces.append(go.Scatter(
             x=fpr[i],
             y=tpr[i],
@@ -787,7 +787,6 @@ def roc_plot(**kwargs):
                 color=col_map
             )
         ))
-
     data = traces
 
     figure = go.Figure(data=data, layout=layout)
@@ -1072,7 +1071,6 @@ def top3(
 
     else:
         nlargest = 4
-
         # reverse one-hot encoding, and categorical map to string label
         df_y_true = pd.DataFrame(
             pd.Series(y_true).map(dict_label), columns=['label'])
@@ -1602,7 +1600,6 @@ class Mgcplot():
         self.list_top_n_class = []
         self.list_top_n_col_name = []
 
-
         for i in range(len(_y_true)):
             arr_y_pred, top_n_class, top_n_col_name_value = top3(
                 y_true = _y_true[i],
@@ -1649,15 +1646,14 @@ class Mgcplot():
                     self.class_rpt_top2.append(class_rpt_top2)
                     self.class_rpt_top3.append(class_rpt_top3)
 
+        self.mgcConfMat()
+        # self.mgcScatterMat(max_weight = 5, fill_col = True, marker_min = 10)
 
 ##########################################################
 ############  Classification Report ######################
 ##########################################################
 
     def mgc_plot_metrics(self):
-
-        self.mgcConfMat()
-        self.mgcScatterMat(max_weight = 5, fill_col = True, marker_min = 10)
 
         from IPython.display import set_matplotlib_formats
         set_matplotlib_formats('retina')
@@ -1981,13 +1977,6 @@ class Mgcplot():
                 #print(y_pred)
                 y_pred2 = pd.Series(list_top_n_class['pred2']).map(dict_factor)
                 #print(y_pred2)
-                                                                          
-            
-                  
-                                                                                     
-                              
-                                                                    
-
                 y_true = pd.Series(list_top_n_class['label']).map(dict_factor)
                 
                 # top1
@@ -2213,18 +2202,15 @@ class Mgcplot():
         for i in range(nb_iter):
             enc = OneHotEncoder().fit(y_true_c[i].reshape(-1,1))
             y_true_onehot = enc.transform(y_true_c[i].reshape(-1,1)).toarray()
-            cols = cl.interp(cl.scales['12']['qual']['Paired'], 20)[:nb_classes_c[i]] # color map
+            cols = cl.interp(cl.scales['12']['qual']['Paired'], nb_classes_c[i])[:nb_classes_c[i]] # color map
             dict_colorx = dict(zip(self.dict_label_c[i].keys(), cols))
-
             _plotAuc_tmp = roc_plot(y_test = y_true_onehot, 
-                               y_score = y_pred_list_df_c[i].values, 
-                               nb_classes = nb_classes_c[i], 
-                               dict_label = self.dict_label_c[i], 
-                               dict_color = dict_colorx)
+                            y_score = y_pred_list_df_c[i].values, 
+                            nb_classes = nb_classes_c[i], 
+                            dict_label = self.dict_label_c[i], 
+                            dict_color = dict_colorx)
 
             plotAucx.append(_plotAuc_tmp)
-
-
         
         self.mgcAucx = plotAucx
         return self
